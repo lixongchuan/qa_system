@@ -1,0 +1,325 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="columns">
+    <!-- 居中布局 -->
+    <div class="column col-10 col-lg-12 col-mx-auto">
+        
+        <!-- 返回首页导航 -->
+        <div style="margin-bottom: 15px;">
+            <a href="/" class="btn btn-link pl-0 text-gray" style="text-decoration: none;">
+                <i class="ri-arrow-left-line"></i> 返回首页
+            </a>
+        </div>
+
+        <!-- ================= 1. 问题详情卡片 ================= -->
+        <div class="card mb-4" style="border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #5E5DF0;">
+            <div class="card-body" style="padding: 2rem;">
+                <!-- 标题 -->
+                <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 1rem; color: #172B4D;">
+                    {{ question_answer_dict.question_title }}
+                </h1>
+                
+                <!-- 问题详情内容 -->
+                <div style="font-size: 1.1rem; line-height: 1.8; color: #42526E;">
+                    {{ question_answer_dict.question_detail }}
+                </div>
+            </div>
+            
+            <div class="card-footer text-right pb-3 pr-3">
+                <!-- [权限控制] 删除问题按钮：仅作者本人 或 管理员可见 -->
+                {% if current_user.is_authenticated and (current_user.id == question_answer_dict.question_author_id or current_user.is_admin) %}
+                    <button class="btn btn-link text-error mr-2" 
+                            onclick="deleteContent('{{question_answer_dict.question_id}}', 'question', '{{question_answer_dict.question_author_id}}')">
+                        <i class="ri-delete-bin-line"></i> 删除问题
+                    </button>
+                {% endif %}
+                
+                <!-- 回答按钮 -->
+                {% if current_user.is_authenticated %}
+                    <button class="btn btn-primary" onclick="$('#answer-modal').addClass('active')">
+                       <i class="ri-edit-line"></i> 我来答一波
+                    </button>
+                {% else %}
+                    <a href="/login" class="btn btn-primary">登录后回答</a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 分割线 & 统计 -->
+        <div class="divider text-center" data-content="{{ question_answer_dict.answer_num }} 个回答" style="margin: 2rem 0; color: #b2bec3;"></div>
+
+        <!-- ================= 2. 回答列表循环 ================= -->
+        {% for answer in question_answer_dict.answer_list %}
+        
+        <!-- 如果是置顶回答，添加特殊样式 (金色边框和浅黄背景) -->
+        <div class="card mb-3 fade-in-up" 
+             style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+                    {% if answer.is_pinned %}border: 2px solid #FFD700; background: #FFFBE6;{% endif %}">
+            
+            <div class="card-body">
+                <div class="tile">
+                    <!-- 在 answer 循环中 -->
+                    <div class="tile-icon">
+                        <a href="/u/{{ answer.author_id }}">
+                            <figure class="avatar avatar-lg">
+                                <img src="{{ url_for('static', filename='uploads/' + answer.author_avatar) }}">
+                            </figure>
+                        </a>
+                    </div>
+                    <div class="tile-content ml-2">
+                        <div class="tile-title text-bold">
+                            <a href="/u/{{ answer.author_id }}" style="color: inherit; text-decoration: none;">
+                                {{ answer.answer_author }}
+                            </a>
+                            
+                           <!-- === 新增：管理员标识 === -->
+                            {% if answer.author_role == 'admin' %}
+                                <span style="background: #FFF7E6; color: #FA8C16; border: 1px solid #FFD591; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px; vertical-align: middle;">
+                                    <i class="ri-shield-check-fill mr-1"></i> 官方认证
+                                </span>
+                            {% endif %}
+
+                            <!-- 置顶标签 (保持不变) -->
+                            {% if answer.is_pinned %}
+                                <span class="label label-warning ml-2" style="background:#FFD700; color:#fff;">
+                                    <i class="ri-pushpin-2-fill"></i> 已置顶
+                                </span>
+                            {% endif %}
+                            
+                            <!-- [管理员权限] 封禁用户按钮 -->
+                            {% if current_user.is_admin and current_user.id != answer.author_id %}
+                                <!-- 修改点：增加了 tooltip-right 和一些样式调整 -->
+                                <button class="btn btn-link btn-sm text-gray ml-2 tooltip tooltip-right" 
+                                        data-tooltip="封禁该用户"
+                                        style="line-height: 1; vertical-align: middle; height: auto; padding: 0 5px;"
+                                        onclick="banUser('{{answer.author_id}}')">
+                                    <i class="ri-prohibited-line" style="font-size: 1.1em; color: #666;"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+                        <div class="text-gray" style="font-size: 0.8rem;">发布于 刚刚</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px; font-size: 1rem; line-height: 1.7; color: #2d3436;">
+                    {{ answer.answer_detail }}
+                </div>
+            </div>
+            
+            <!-- 底部操作栏 -->
+            <div class="card-footer pt-2">
+                <!-- 赞同按钮 -->
+                 <button class="vote-btn mr-2 {% if answer.is_upvoted %}active-up{% endif %}" 
+                    id="a-up-{{answer.answer_id}}"
+                    onclick="vote('{{answer.answer_id}}', 'answer', 'vote_up')">
+                    <i class="ri-thumb-up-line"></i> <span id="count-answer-{{answer.answer_id}}">{{answer.answer_vote}}</span>
+                </button>
+
+                <!-- 反对按钮 -->
+                <button class="vote-btn {% if answer.is_downvoted %}active-down{% endif %}" 
+                    id="a-down-{{answer.answer_id}}"
+                    onclick="vote('{{answer.answer_id}}', 'answer', 'vote_down')">
+                    <i class="ri-thumb-down-line"></i>
+                </button>
+
+                <!-- [管理员权限] 置顶/取消置顶 -->
+                {% if current_user.is_admin %}
+                    <button class="btn btn-link btn-sm ml-2" onclick="pinAnswer('{{answer.answer_id}}')">
+                        {% if answer.is_pinned %}
+                            <span class="text-warning"><i class="ri-unpin-line"></i> 取消置顶</span>
+                        {% else %}
+                            <span class="text-gray"><i class="ri-pushpin-line"></i> 置顶</span>
+                        {% endif %}
+                    </button>
+                {% endif %}
+
+                <!-- [权限控制] 删除回答按钮：作者本人 或 管理员 -->
+                {% if current_user.is_authenticated and (current_user.id == answer.author_id or current_user.is_admin) %}
+                    <button class="btn btn-link btn-sm text-error float-right" 
+                            onclick="deleteContent('{{answer.answer_id}}', 'answer', '{{answer.author_id}}')">
+                        <i class="ri-delete-bin-line"></i> 删除
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 写回答弹窗 -->
+<div class="modal" id="answer-modal">
+    <a href="#close" class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-container" style="border-radius: 12px;">
+        <div class="modal-header">
+            <a href="#close" class="btn btn-clear float-right" aria-label="Close"></a>
+            <div class="modal-title h5">📝 撰写回答</div>
+        </div>
+        <div class="modal-body">
+            <div class="content">
+                <textarea class="form-input" id="answer-content" rows="6" placeholder="友善交流，不仅解决问题，更温暖人心..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="postAnswer()">发布回答</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 全局变量，获取当前问题ID
+var q_id = "{{ question_answer_dict.question_id }}";
+
+// 1. 发布回答 (已更新：处理封禁错误信息)
+function postAnswer(){
+    var content = $('#answer-content').val();
+    if(!content) { alert("一个字都不写吗？"); return; }
+    
+    $.ajax({
+        type: "post",
+        url: '/post_answer',
+        data: JSON.stringify({question_id: q_id, answer: content}),
+        contentType: "application/json",
+        success: function(res) { 
+            // 如果后端返回 success
+            if(res.status === 'success') {
+                window.location.reload(); 
+            } else {
+                // 如果被封禁，res.status 会是 'fail'，并且有 msg
+                alert("发布失败：" + res.msg);
+                $('.modal').removeClass('active'); // 关闭弹窗
+            }
+        },
+        error: function() {
+            alert("网络错误，请稍后再试");
+        }
+    });
+}
+
+// 2. 删除内容 (问题或回答)
+function deleteContent(id, type, authorId) {
+    var tip = (type === 'question') ? '删除问题将会连同删除其下的所有回答，确定吗？' : '确定要删除这条回答吗？';
+    if(!confirm(tip)) return;
+    
+    $.ajax({
+        type: "post",
+        url: '/delete_content',
+        data: JSON.stringify({id: id, type: type, author_id: authorId}),
+        contentType: "application/json",
+        success: function(res) {
+            if(res.status === 'success') {
+                if(type === 'question') {
+                    // 如果删了问题，跳回首页
+                    window.location.href = '/';
+                } else {
+                    // 如果删了回答，刷新当前页
+                    window.location.reload();
+                }
+            } else {
+                alert(res.msg);
+            }
+        }
+    });
+}
+
+// 3. 管理员：置顶回答
+function pinAnswer(aid) {
+    $.ajax({
+        type: "post",
+        url: '/admin/pin_answer',
+        data: JSON.stringify({answer_id: aid}),
+        contentType: "application/json",
+        success: function(res) {
+            if(res.status === 'success') {
+                window.location.reload();
+            } else {
+                alert(res.msg);
+            }
+        }
+    });
+}
+
+// 4. 管理员：封禁用户
+function banUser(uid) {
+    var days = prompt("👮‍♂️ 管理员操作\n\n请输入封禁天数 (例如: 3)：", "3");
+    if(days != null && days.trim() !== "") {
+        $.ajax({
+            type: "post",
+            url: '/admin/ban_user',
+            data: JSON.stringify({user_id: uid, days: days}),
+            contentType: "application/json",
+            success: function(res) {
+                alert(res.msg);
+            },
+            error: function() {
+                alert("操作失败，请检查权限");
+            }
+        });
+    }
+}
+
+// 5. 投票逻辑 (复用之前的)
+function vote(id, type, val){
+    var btnUp = $('#a-up-'+id);
+    var btnDown = $('#a-down-'+id);
+    var countSpan = $('#count-'+type+'-'+id);
+
+    $.ajax({
+        type: "post",
+        url: '/vote',
+        data: JSON.stringify({doc_id: id, doc_type: type, value: val}),
+        contentType: "application/json",
+        success: function(data) {
+            countSpan.text(data.new_count);
+            if (val === 'vote_up') {
+                if(btnUp.hasClass('active-up')) {
+                    btnUp.removeClass('active-up');
+                } else {
+                    btnUp.addClass('active-up');
+                    btnDown.removeClass('active-down');
+                }
+            } else {
+                if(btnDown.hasClass('active-down')) {
+                    btnDown.removeClass('active-down');
+                } else {
+                    btnDown.addClass('active-down');
+                    btnUp.removeClass('active-up');
+                }
+            }
+        },
+        error: function() {
+            alert('请先登录！');
+            window.location.href = '/login';
+        }
+    });
+}
+</script>
+<style>
+    /* 简单的样式补充 */
+    .vote-btn {
+        background: #f4f6f8; border: none; color: #66757f;
+        padding: 4px 12px; border-radius: 4px; cursor: pointer;
+        display: inline-flex; align-items: center; transition: all 0.2s;
+    }
+    .vote-btn:hover { background: #e1e8ed; color: #0066FF; }
+    .vote-btn.active-up { background: #E6F0FF; color: #0066FF; font-weight: bold; }
+    .vote-btn.active-down { background: #FFF0EB; color: #DE350B; }
+
+    /* 1. 强制把内容容器提到最上层 */
+    .modal-container {
+        position: relative !important;
+        z-index: 9999 !important; /* 数值设得很大，保证在最上面 */
+        background: #fff; /* 确保背景不透明 */
+    }
+
+    /* 2. 确保遮罩层在内容容器的下面 */
+    .modal-overlay {
+        z-index: 999 !important; /* 数值比 container 小 */
+        background: rgba(0, 0, 0, 0.45) !important; /* 如果你想要深色背景，用这行 */
+        /* background: rgba(255, 255, 255, 0.75) !important; 如果你想要之前的浅色磨砂感，用这行 */
+    }
+
+</style>
+{% endblock %}

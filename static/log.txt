@@ -1,0 +1,31 @@
+nohup: ignoring input
+[2025-11-27 19:43:07 +0800] [1286249] [INFO] Starting gunicorn 23.0.0
+[2025-11-27 19:43:07 +0800] [1286249] [INFO] Listening at: http://0.0.0.0:8700 (1286249)
+[2025-11-27 19:43:07 +0800] [1286249] [INFO] Using worker: sync
+[2025-11-27 19:43:07 +0800] [1286250] [INFO] Booting worker with pid: 1286250
+[2025-11-27 19:43:07 +0800] [1286250] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/arbiter.py", line 608, in spawn_worker
+    worker.init_process()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/workers/base.py", line 135, in init_process
+    self.load_wsgi()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/workers/base.py", line 147, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/app/base.py", line 66, in wsgi
+    self.callable = self.load()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/app/wsgiapp.py", line 57, in load
+    return self.load_wsgiapp()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/app/wsgiapp.py", line 47, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/util.py", line 370, in import_app
+    mod = importlib.import_module(module)
+  File "/usr/lib/python3.10/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1004, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'main'
+[2025-11-27 19:43:07 +0800] [1286250] [INFO] Worker exiting (pid: 1286250)
+[2025-11-27 19:43:07 +0800] [1286249] [ERROR] Worker (pid:1286250) exited with code 3
+[2025-11-27 19:43:07 +0800] [1286249] [ERROR] Shutting down: Master
+[2025-11-27 19:43:07 +0800] [1286249] [ERROR] Reason: Worker failed to boot.

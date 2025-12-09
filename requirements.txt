@@ -1,0 +1,7 @@
+flask
+pymongo
+flask-login
+gunicorn
+werkzeug
+Pillow
+dnspython

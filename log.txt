@@ -1,0 +1,178 @@
+nohup: ignoring input
+[2025-11-27 19:44:32 +0800] [1287454] [INFO] Starting gunicorn 23.0.0
+[2025-11-27 19:44:32 +0800] [1287454] [INFO] Listening at: http://0.0.0.0:8700 (1287454)
+[2025-11-27 19:44:32 +0800] [1287454] [INFO] Using worker: sync
+[2025-11-27 19:44:32 +0800] [1287455] [INFO] Booting worker with pid: 1287455
+[2025-11-27 19:44:32 +0800] [1287456] [INFO] Booting worker with pid: 1287456
+[2025-11-27 19:44:32 +0800] [1287457] [INFO] Booting worker with pid: 1287457
+[2025-11-27 19:44:32 +0800] [1287458] [INFO] Booting worker with pid: 1287458
+[2025-11-27 19:47:45 +0800] [1287454] [INFO] Handling signal: hup
+[2025-11-27 19:47:45 +0800] [1287454] [INFO] Hang up: Master
+[2025-11-27 19:47:45 +0800] [1287454] [ERROR] Worker (pid:1287458) was sent SIGHUP!
+--- Logging error ---
+[2025-11-27 19:47:45 +0800] [1287454] [ERROR] Worker (pid:1287455) was sent SIGHUP!
+[2025-11-27 19:47:45 +0800] [1287454] [ERROR] Worker (pid:1287457) was sent SIGHUP!
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/logging/__init__.py", line 1103, in emit
+    stream.write(msg + self.terminator)
+RuntimeError: reentrant call inside <_io.BufferedWriter name='<stderr>'>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/logging/__init__.py", line 1103, in emit
+    stream.write(msg + self.terminator)
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/arbiter.py", line 241, in handle_chld
+    self.reap_workers()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/arbiter.py", line 553, in reap_workers
+    self.log.error(msg)
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/glogging.py", line 271, in error
+    self.error_log.error(msg, *args, **kwargs)
+  File "/usr/lib/python3.10/logging/__init__.py", line 1506, in error
+    self._log(ERROR, msg, args, **kwargs)
+  File "/usr/lib/python3.10/logging/__init__.py", line 1624, in _log
+    self.handle(record)
+  File "/usr/lib/python3.10/logging/__init__.py", line 1634, in handle
+    self.callHandlers(record)
+  File "/usr/lib/python3.10/logging/__init__.py", line 1696, in callHandlers
+    hdlr.handle(record)
+  File "/usr/lib/python3.10/logging/__init__.py", line 968, in handle
+    self.emit(record)
+  File "/usr/lib/python3.10/logging/__init__.py", line 1108, in emit
+    self.handleError(record)
+  File "/usr/lib/python3.10/logging/__init__.py", line 1021, in handleError
+    sys.stderr.write('--- Logging error ---\n')
+RuntimeError: reentrant call inside <_io.BufferedWriter name='<stderr>'>
+Call stack:
+  File "/usr/local/bin/gunicorn", line 8, in <module>
+    sys.exit(run())
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/app/wsgiapp.py", line 66, in run
+    WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]", prog=prog).run()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/app/base.py", line 235, in run
+    super().run()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/app/base.py", line 71, in run
+    Arbiter(self).run()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/arbiter.py", line 223, in run
+    handler()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/arbiter.py", line 252, in handle_hup
+    self.reload()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/arbiter.py", line 450, in reload
+    self.app.reload()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/app/base.py", line 60, in reload
+    self.do_load_config()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/app/base.py", line 35, in do_load_config
+    self.load_config()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/app/wsgiapp.py", line 38, in load_config
+    super().load_config()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/app/base.py", line 156, in load_config
+    parser = self.cfg.parser()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/config.py", line 98, in parser
+    self.settings[k].add_option(parser)
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/config.py", line 305, in add_option
+    parser.add_argument(*args, **kwargs)
+  File "/usr/lib/python3.10/argparse.py", line 1456, in add_argument
+    self._get_formatter()._format_args(action, None)
+  File "/usr/lib/python3.10/argparse.py", line 2566, in _get_formatter
+    return self.formatter_class(prog=self.prog)
+  File "/usr/lib/python3.10/argparse.py", line 198, in __init__
+    self._whitespace_matcher = _re.compile(r'\s+', _re.ASCII)
+  File "/usr/lib/python3.10/re.py", line 251, in compile
+    return _compile(pattern, flags)
+  File "/usr/lib/python3.10/re.py", line 291, in _compile
+    flags = flags.value
+  File "/usr/lib/python3.10/types.py", line 183, in __get__
+    return self.fget(instance)
+  File "/usr/lib/python3.10/enum.py", line 801, in value
+    @DynamicClassAttribute
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/arbiter.py", line 241, in handle_chld
+    self.reap_workers()
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/arbiter.py", line 553, in reap_workers
+    self.log.error(msg)
+  File "/usr/local/lib/python3.10/dist-packages/gunicorn/glogging.py", line 271, in error
+    self.error_log.error(msg, *args, **kwargs)
+Message: 'Worker (pid:1287458) was sent SIGHUP!'
+Arguments: ()
+[2025-11-27 19:47:45 +0800] [1289964] [INFO] Booting worker with pid: 1289964
+[2025-11-27 19:47:45 +0800] [1289966] [INFO] Booting worker with pid: 1289966
+[2025-11-27 19:47:45 +0800] [1289967] [INFO] Booting worker with pid: 1289967
+[2025-11-27 19:47:45 +0800] [1289965] [INFO] Booting worker with pid: 1289965
+[2025-11-28 17:59:55,904] ERROR in app: Exception on /register [POST]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/opt/qa_system/main.py", line 72, in register
+    success, msg = mongo.register_user(email, username, password)
+  File "/opt/qa_system/your_code_here/MongoUtil.py", line 32, in register_user
+    "password_hash": generate_password_hash(password),
+  File "/usr/local/lib/python3.10/dist-packages/werkzeug/security.py", line 108, in generate_password_hash
+    h, actual_method = _hash_internal(method, salt, password)
+  File "/usr/local/lib/python3.10/dist-packages/werkzeug/security.py", line 28, in _hash_internal
+    password_bytes = password.encode()
+AttributeError: 'NoneType' object has no attribute 'encode'
+[2025-11-28 17:59:55,941] ERROR in app: Exception on /register [POST]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/opt/qa_system/main.py", line 72, in register
+    success, msg = mongo.register_user(email, username, password)
+  File "/opt/qa_system/your_code_here/MongoUtil.py", line 32, in register_user
+    "password_hash": generate_password_hash(password),
+  File "/usr/local/lib/python3.10/dist-packages/werkzeug/security.py", line 108, in generate_password_hash
+    h, actual_method = _hash_internal(method, salt, password)
+  File "/usr/local/lib/python3.10/dist-packages/werkzeug/security.py", line 28, in _hash_internal
+    password_bytes = password.encode()
+AttributeError: 'NoneType' object has no attribute 'encode'
+[2025-12-01 08:10:35,975] ERROR in app: Exception on /question/#close [GET]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/opt/qa_system/main.py", line 136, in question_detail
+    data = mongo.query_answer(question_id)
+  File "/opt/qa_system/your_code_here/MongoUtil.py", line 173, in query_answer
+    oid = ObjectId(question_id)
+  File "/usr/local/lib/python3.10/dist-packages/bson/objectid.py", line 105, in __init__
+    self.__validate(oid)
+  File "/usr/local/lib/python3.10/dist-packages/bson/objectid.py", line 193, in __validate
+    _raise_invalid_id(oid)
+  File "/usr/local/lib/python3.10/dist-packages/bson/objectid.py", line 38, in _raise_invalid_id
+    raise InvalidId(
+bson.errors.InvalidId: '#close' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+[2025-12-02 00:01:00,662] ERROR in app: Exception on /question/#close [GET]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/usr/local/lib/python3.10/dist-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/opt/qa_system/main.py", line 136, in question_detail
+    data = mongo.query_answer(question_id)
+  File "/opt/qa_system/your_code_here/MongoUtil.py", line 173, in query_answer
+    oid = ObjectId(question_id)
+  File "/usr/local/lib/python3.10/dist-packages/bson/objectid.py", line 105, in __init__
+    self.__validate(oid)
+  File "/usr/local/lib/python3.10/dist-packages/bson/objectid.py", line 193, in __validate
+    _raise_invalid_id(oid)
+  File "/usr/local/lib/python3.10/dist-packages/bson/objectid.py", line 38, in _raise_invalid_id
+    raise InvalidId(
+bson.errors.InvalidId: '#close' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string

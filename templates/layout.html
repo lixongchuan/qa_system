@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>UniAsk 校园圈</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <!-- 基础样式库 -->
+    <link rel="stylesheet" href="{{url_for('static', filename='css/spectre.min.css')}}">
+    <!-- 引入 Remix Icon (更现代的图标库) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/remixicon.css') }}">
+    <!-- JQuery -->
+    <script src="{{url_for('static', filename='js/jquery-3.3.1.min.js')}}"></script>
+    
+    <style>
+        /* === 1. 设计系统变量 === */
+        :root {
+            --primary: #5E5DF0;  /* 稍微偏紫蓝的现代色 */
+            --primary-hover: #4a49c9;
+            --bg-body: #F5F7FA;  /* 柔和的灰白背景 */
+            --text-main: #1F2D3D;
+            --text-light: #8492A6;
+            --card-radius: 12px; /* 更大的圆角 */
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+            --shadow-hover: 0 12px 24px rgba(94, 93, 240, 0.12); /* 悬浮时的彩色阴影 */
+        }
+
+
+        /* 1. 强制把内容容器提到最上层 */
+        .modal-container {
+            position: relative !important;
+            z-index: 9999 !important; /* 数值设得很大，保证在最上面 */
+            background: #fff; /* 确保背景不透明 */
+        }
+
+        /* 2. 确保遮罩层在内容容器的下面 */
+        .modal-overlay {
+            z-index: 999 !important; /* 数值比 container 小 */
+            background: rgba(0, 0, 0, 0.45) !important; /* 如果你想要深色背景，用这行 */
+            /* background: rgba(255, 255, 255, 0.75) !important; 如果你想要之前的浅色磨砂感，用这行 */
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            -webkit-font-smoothing: antialiased; /* 让字体更清晰 */
+        }
+
+        /* === 2. 导航栏重构：解决粘连问题 === */
+        .navbar {
+            background: #fff;
+            height: 72px; /* 增加高度 */
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 0 20px; /* 左右增加内边距 */
+        }
+        
+        /* 使用 Flexbox 强制分开 Logo 和 用户菜单 */
+        .navbar-container {
+            display: flex;
+            justify-content: space-between; /* 关键：两端对齐 */
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100%;
+        }
+
+        /* 个性化 Logo */
+        .brand-logo {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--text-main) !important;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            letter-spacing: -0.5px;
+        }
+        .brand-icon {
+            color: #fff;
+            background: linear-gradient(135deg, #5E5DF0, #00C6FB);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(94, 93, 240, 0.3);
+        }
+
+        /* === 3. 卡片优化：增加呼吸感 === */
+        .card {
+            border: none;
+            border-radius: var(--card-radius);
+            background: #fff;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            margin-bottom: 24px; /* 增加卡片间距 */
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-4px); /* 悬浮上移 */
+            box-shadow: var(--shadow-hover);
+        }
+        .card-body {
+            padding: 1.5rem; /* 增加内部留白 */
+        }
+        .card-footer {
+            background: transparent;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        /* === 4. 按钮与交互 === */
+        .btn {
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+            height: 38px;
+        }
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(94, 93, 240, 0.25);
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+        
+        /* 投票按钮美化 */
+        .vote-btn {
+            background: #F2F3F5;
+            color: #5F6368;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .vote-btn i { margin-right: 4px; font-size: 1.1rem; }
+        .vote-btn:hover { background: #E5E6EB; }
+        
+        .vote-btn.active-up { background: #E8F0FE; color: var(--primary); }
+        .vote-btn.active-down { background: #FEE2E2; color: #EF4444; }
+
+        /* === 5. 动画类 === */
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* === 6. 杂项微调 === */
+        .navbar .avatar { width: 36px; height: 36px; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .text-light { color: var(--text-light) !important; }
+        
+        /* 头像名字区域 */
+        .user-menu-btn {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+        .user-menu-btn:hover { background: #f0f0f0; text-decoration: none; }
+        
+        /* 侧边栏标题装饰 */
+        .sidebar-heading {
+            font-size: 0.85rem;
+            color: #8492A6;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<header class="navbar">
+    <div class="navbar-container">
+        <!-- 左侧：Logo -->
+        <a href="/" class="brand-logo">
+            <div class="brand-icon"><i class="ri-planet-line"></i></div>
+            UniAsk<span style="font-weight: 400; font-size: 1.2rem; margin-left: 6px; color: #555;">校园圈</span>
+        </a>
+        
+        <!-- 右侧：用户菜单 -->
+        <div>
+            {% if current_user.is_authenticated %}
+                <div class="dropdown dropdown-right">
+                    <a href="#" class="user-menu-btn dropdown-toggle" tabindex="0">
+                        <figure class="avatar mr-2">
+                            <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}">
+                        </figure>
+                        <span>{{ current_user.username }}</span>
+                        <i class="ri-arrow-down-s-line ml-1"></i>
+                    </a>
+                    <ul class="menu" style="min-width: 180px; padding: 10px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 12px; margin-top: 10px;">
+                        <li class="menu-item"><a href="/profile"><i class="ri-settings-3-line mr-2"></i> 个人设置</a></li>
+                        <li class="menu-divider"></li>
+                        <li class="menu-item"><a href="/logout" style="color: #ef4444;"><i class="ri-logout-box-r-line mr-2"></i> 退出登录</a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="/login" class="btn btn-link">登录</a>
+                <a href="/register" class="btn btn-primary ml-2">加入社区</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+<div class="container grid-xl" style="padding-top: 40px; padding-bottom: 60px;">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast toast-primary mb-2 shadow-sm" style="border-radius: 8px;">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    {% block content %}{% endblock %}
+</div>
+
+<!-- 提问弹窗 (美化版) -->
+{% if current_user.is_authenticated %}
+<div class="modal" id="ask-question-modal">
+    <a href="#close" class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-container" style="border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
+        <div class="modal-header">
+            <a href="#close" class="btn btn-clear float-right" aria-label="Close"></a>
+            <div class="modal-title h5 text-bold"><i class="ri-question-answer-line mr-2" style="color: var(--primary);"></i>发起新讨论</div>
+        </div>
+        <div class="modal-body">
+            <div class="content">
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">标题</label>
+                        <input class="form-input input-lg" id="question_title" type="text" placeholder="起个吸引人的标题..." style="font-weight: bold;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">详情</label>
+                        <textarea class="form-input" id="question_detail" rows="5" placeholder="请详细描述你的问题背景、条件等..."></textarea>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-link" onclick="$('.modal').removeClass('active')">取消</button>
+            <button class="btn btn-primary" id="post-question">🚀 立即发布</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    $('.trigger-ask').click(function(){ $('#ask-question-modal').addClass('active'); });
+    $('.modal-overlay, .btn-clear').click(function(){ $('.modal').removeClass('active'); });
+    $('#post-question').click(function(){
+        var title = $('#question_title').val();
+        var detail = $('#question_detail').val();
+        if(!title) { alert('标题不能为空'); return; }
+        $.ajax({
+            type: "post",
+            url: '/post_question',
+            data: JSON.stringify({title: title, detail: detail}),
+            contentType: "application/json",
+            success: function(data) { window.location.reload(); }
+        });
+    });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

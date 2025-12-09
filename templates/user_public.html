@@ -1,0 +1,114 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="columns">
+    <div class="column col-8 col-mx-auto col-md-12">
+        
+        <!-- 顶部个人信息卡片 -->
+        <div class="card mb-4 text-center pt-4 pb-2" style="border-top: 5px solid #5E5DF0;">
+            <div class="card-image">
+                <figure class="avatar avatar-xl" style="width: 96px; height: 96px; font-size: 2rem;">
+                    <img src="{{ url_for('static', filename='uploads/' + data.profile.avatar) }}" alt="...">
+                </figure>
+            </div>
+            <div class="card-header">
+                <div class="h3 card-title text-bold">
+                    {{ data.profile.username }}
+                   {% if data.profile.role == 'admin' %}
+                        <span class="tooltip tooltip-bottom" data-tooltip="社区管理员" style="margin-left: 8px; color: #FA8C16; background: #FFF7E6; padding: 4px; border-radius: 50%;">
+                            <i class="ri-shield-star-fill" style="font-size: 1.2rem; display: block;"></i>
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="card-subtitle text-gray mt-2">{{ data.profile.bio }}</div>
+            </div>
+            <div class="card-body">
+                <span class="chip text-primary bg-gray">加入时间：{{ data.profile.join_date }}</span>
+            </div>
+            <div class="card-footer">
+                <div class="columns text-center">
+                    <div class="column col-6 border-right">
+                        <div class="h4 m-0 text-bold">{{ data.stats.q_count }}</div>
+                        <div class="text-gray text-tiny">提问</div>
+                    </div>
+                    <div class="column col-6">
+                        <div class="h4 m-0 text-bold">{{ data.stats.a_count }}</div>
+                        <div class="text-gray text-tiny">回答</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 下方内容切换 -->
+        <ul class="tab tab-block mb-4">
+            <li class="tab-item active" id="tab-questions" onclick="switchTab('questions')">
+                <a href="javascript:;" class="badge" data-badge="{{ data.stats.q_count }}">TA 的提问</a>
+            </li>
+            <li class="tab-item" id="tab-answers" onclick="switchTab('answers')">
+                <a href="javascript:;" class="badge" data-badge="{{ data.stats.a_count }}">TA 的回答</a>
+            </li>
+        </ul>
+
+        <!-- 提问列表 -->
+        <div id="content-questions">
+            {% if data.questions|length == 0 %}
+                <div class="empty"><p class="empty-title">暂无提问</p></div>
+            {% endif %}
+            {% for q in data.questions %}
+            <div class="tile tile-centered mb-2 p-2 bg-gray" style="border-radius: 8px;">
+                <div class="tile-content">
+                    <div class="tile-title text-bold">
+                        <a href="/question/{{q.id}}" class="text-dark">{{ q.title }}</a>
+                    </div>
+                    <div class="tile-subtitle text-gray text-small">{{ q.time }}</div>
+                </div>
+                <div class="tile-action">
+                    <span class="badge" data-badge="{{ q.vote_count }}" style="background:none; color:#5E5DF0; font-weight:bold;">获赞</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- 回答列表 (默认隐藏) -->
+        <div id="content-answers" style="display: none;">
+            {% if data.answers|length == 0 %}
+                <div class="empty"><p class="empty-title">暂无回答</p></div>
+            {% endif %}
+            {% for a in data.answers %}
+            <div class="card mb-3 shadow-sm" style="border:none;">
+                <div class="card-header pb-0">
+                    <div class="text-gray text-small">回答了问题：</div>
+                    <a href="/question/{{a.question_id}}" class="h6 text-bold text-dark">{{ a.question_title }}</a>
+                </div>
+                <div class="card-body text-gray">
+                    “{{ a.preview }}”
+                </div>
+                <div class="card-footer text-right">
+                    <small class="text-gray mr-2">{{ a.time }}</small>
+                    <span class="text-primary"><i class="ri-thumb-up-line"></i> {{ a.vote_count }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchTab(type) {
+    // 移除所有 active
+    $('.tab-item').removeClass('active');
+    
+    // 隐藏所有内容
+    $('#content-questions').hide();
+    $('#content-answers').hide();
+    
+    // 激活当前
+    $('#tab-' + type).addClass('active');
+    $('#content-' + type).fadeIn();
+}
+</script>
+{% endblock %}

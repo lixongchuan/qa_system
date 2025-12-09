@@ -1,0 +1,382 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<!-- 引入 RemixIcon 图标库 -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/remixicon.css') }}">
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<style>
+    /* 1. 列表加载动画 */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translate3d(0, 20px, 0); }
+        to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+    .fade-in-up {
+        animation-name: fadeInUp;
+        animation-duration: 0.6s;
+        animation-fill-mode: both;
+    }
+
+    /* 2. 分离式投票按钮样式 */
+    .vote-btn {
+        background: #f4f6f8; /* 默认浅灰背景 */
+        border: 1px solid transparent;
+        color: #66757f;
+        padding: 4px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.2;
+        height: 32px;
+        min-width: 40px;
+    }
+    .vote-btn i { 
+        margin-right: 4px; 
+        font-size: 1.1em;
+    }
+    .vote-btn:hover { 
+        background: #e1e8ed; 
+        color: #0066FF; 
+    }
+    
+    /* 激活状态：蓝色高亮 */
+    .vote-btn.active-up { 
+        background: #E6F0FF; 
+        color: #0066FF; 
+        font-weight: bold;
+    }
+    .vote-btn.active-down { 
+        background: #FFF0EB; 
+        color: #DE350B; 
+    }
+
+    /* 3. 阅读全文链接样式 */
+    .read-more-link {
+        color: #0066FF;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        transition: transform 0.2s;
+    }
+    .read-more-link:hover {
+        transform: translateX(4px);
+        text-decoration: none;
+    }
+</style>
+
+<div class="columns" style="transform: scale(0.8); transform-origin: top center; width: 125%; margin-left: -12.5%;">
+    
+    <!-- ================= 左侧内容区 (Col-8) ================= -->
+    <div class="column col-8 col-md-12">
+        <div class="d-flex align-items-center mb-3" style="display: flex; align-items: center;">
+            <h4 class="m-0 text-bold"><i class="ri-fire-line mr-2" style="color: #FF6B6B;"></i>最新动态</h4>
+        </div>
+
+        {% if question_list|length == 0 %}
+        <div class="empty fade-in-up">
+            <div class="empty-icon"><i class="ri-inbox-line" style="font-size: 3rem; color: #ccc;"></i></div>
+            <p class="empty-title h5">这里静悄悄的</p>
+            <p class="empty-subtitle">快来发布第一条内容吧</p>
+        </div>
+        {% endif %}
+
+        {% for question in question_list %}
+        <div class="card mb-3 fade-in-up" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-radius: 8px; animation-delay: {{ loop.index0 * 0.1 }}s;">
+            <div class="card-body pb-2">
+                <div class="tile align-items-start" style="display: flex; align-items: flex-start;">
+                    <!-- 点击头像跳转 -->
+                    <div class="tile-icon">
+                        <a href="/u/{{ question.author_id }}">
+                            <figure class="avatar avatar-lg" style="width: 48px; height: 48px; background: #fff; border: 1px solid #eee;">
+                                <img src="{{ url_for('static', filename='uploads/' + question.author_avatar) }}">
+                            </figure>
+                        </a>
+                    </div>
+                    <div class="tile-content ml-3" style="margin-left: 1rem;">
+                        <div class="tile-title mb-1">
+                            {% if question.is_pinned %}
+                            <span class="label label-warning mr-1" style="background: #FFD700; color: #fff; vertical-align: middle;">
+                                <i class="ri-pushpin-2-fill"></i> 置顶
+                            </span>
+                            {% endif %}
+                            <a href="/question/{{question.question_id}}" style="color: #172B4D; font-weight: 700; font-size: 1.15rem; text-decoration: none; line-height: 1.4;">
+                                {{ question.title }}
+                            </a>
+                        </div>
+                        <div class="tile-subtitle text-gray mb-2" style="font-size: 0.85rem; color: #999;">
+                            <!-- 点击名字跳转 -->
+                            <a href="/u/{{ question.author_id }}" class="text-bold text-dark" style="text-decoration: none;">
+                                {{ question.author }}
+                            </a>
+                            {% if question.author_role == 'admin' %}
+                                <span style="background: #FFF7E6; color: #FA8C16; border: 1px solid #FFD591; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 6px; display: inline-flex; align-items: center;">
+                                    <i class="ri-admin-fill mr-1"></i> 管理员
+                                </span>
+                            {% endif %}
+                            
+                            <span class="mx-1">·</span>
+                            <span>{{ question.ask_time }}</span>
+                        </div>
+                        <div style="color: #5E6C84; font-size: 0.95rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer;" onclick="window.location.href='/question/{{question.question_id}}'">
+                            {{ question.detail }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer pt-2 pb-3 pl-3 pr-3" style="display: flex; justify-content: space-between; align-items: center;">
+                
+                <!-- 左边部分：按钮组 -->
+                <div style="display: flex; align-items: center;">
+                    <!-- 赞 -->
+                    <button class="vote-btn mr-2 {% if question.my_vote == 'up' %}active-up{% endif %}" 
+                            style="margin-right: 10px;"
+                            id="q-up-{{question.question_id}}"
+                            onclick="vote('{{question.question_id}}', 'question', 'vote_up')">
+                        <i class="ri-thumb-up-line"></i> 
+                        <span id="count-question-{{question.question_id}}">{{question.vote_up}}</span>
+                    </button>
+                    
+                    <!-- 踩 -->
+                    <button class="vote-btn {% if question.my_vote == 'down' %}active-down{% endif %}" 
+                            id="q-down-{{question.question_id}}"
+                            onclick="vote('{{question.question_id}}', 'question', 'vote_down')">
+                        <i class="ri-thumb-down-line"></i>
+                    </button>
+                    
+                    <!-- 评论 -->
+                    <a href="/question/{{question.question_id}}" class="btn btn-link text-gray" style="text-decoration: none; padding: 0; display: flex; align-items: center; margin-left: 20px; color: #66757f;">
+                        <i class="ri-chat-3-line mr-1" style="font-size: 1.2em; margin-right: 5px;"></i> 
+                        {{ question.answer_number }} 评论
+                    </a>
+
+                    <!-- 管理员置顶按钮 -->
+                    {% if current_user.is_admin %}
+                        <button class="btn btn-link ml-2" style="font-size: 0.8rem; color: #FA8C16;"
+                                onclick="pinQuestion('{{question.question_id}}')">
+                            {% if question.is_pinned %}
+                                <i class="ri-unpin-line"></i> 取消置顶
+                            {% else %}
+                                <i class="ri-pushpin-line"></i> 置顶
+                            {% endif %}
+                        </button>
+                    {% endif %}
+
+                    <!-- 删除按钮 -->
+                    {% if current_user.is_authenticated and (current_user.id == question.author_id or current_user.is_admin) %}
+                    <button class="btn btn-link text-error ml-2" style="font-size: 0.8rem;" 
+                            onclick="deleteContent('{{question.question_id}}', 'question', '{{question.author_id}}')">
+                        <i class="ri-delete-bin-line"></i> 删除
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <!-- 右边部分：阅读全文 -->
+                <div>
+                    <a href="/question/{{question.question_id}}" class="read-more-link">
+                        阅读全文 <i class="ri-arrow-right-s-line" style="font-size: 1.2em; vertical-align: middle;"></i>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    <!-- ================= 右侧侧边栏 (Col-4) ================= -->
+    <div class="column col-4 hide-md pl-2" style="padding-left: 1rem;">
+        
+        <!-- 1. 个人中心卡片 -->
+        <div class="card mb-3" style="border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
+            {% if current_user.is_authenticated %}
+                <div style="height: 60px; background: linear-gradient(120deg, #0066FF 0%, #0052cc 100%);"></div>
+                
+                <div class="card-header text-center" style="margin-top: -30px;">
+                    <figure class="avatar avatar-xl mb-2" style="width: 72px; height: 72px; border: 4px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #fff;">
+                        <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}">
+                    </figure>
+                    
+                    <div class="h5 mb-1" style="font-weight: 700; color: #172B4D;">{{ current_user.username }}</div>
+                    <div class="text-gray px-2 text-ellipsis" style="font-size: 0.85rem; min-height: 1.2rem;">
+                        {{ user_stats.bio if user_stats.bio else '这家伙很神秘，什么也没写' }}
+                    </div>
+                </div>
+
+                <div class="card-body pt-2">
+                    <div class="divider"></div>
+                    <div style="display: flex; justify-content: space-between; text-align: center; padding: 10px 0;">
+                        <div style="flex: 1;">
+                            <div class="h5 text-bold m-0" style="color: #172B4D;">{{ user_stats.question_count }}</div>
+                            <div class="text-gray" style="font-size: 0.75rem;">提问</div>
+                        </div>
+                        <div style="width: 1px; background: #eee; height: 24px; margin-top: 5px;"></div>
+                        <div style="flex: 1;">
+                            <div class="h5 text-bold m-0" style="color: #172B4D;">{{ user_stats.answer_count }}</div>
+                            <div class="text-gray" style="font-size: 0.75rem;">回答</div>
+                        </div>
+                        <div style="width: 1px; background: #eee; height: 24px; margin-top: 5px;"></div>
+                        <div style="flex: 1;">
+                            <div class="h5 text-bold m-0" style="color: #172B4D;">{{ user_stats.vote_count }}</div>
+                            <div class="text-gray" style="font-size: 0.75rem;">获赞</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer pb-4 px-4">
+                    <button class="btn btn-primary btn-block trigger-ask" style="height: 40px; border-radius: 6px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,102,255,0.2); background: #0066FF; border-color: #0066FF;">
+                        <i class="icon icon-edit"></i> 快速提问
+                    </button>
+                </div>
+            {% else %}
+                <div class="card-body text-center py-5">
+                    <div class="mb-3" style="font-size: 2rem;">👋</div>
+                    <div class="h5">UniAsk 社区</div>
+                    <p class="text-gray mb-4">连接校友，分享知识</p>
+                    <a href="/login" class="btn btn-primary btn-block" style="background: #0066FF; border-color: #0066FF;">登录 / 注册</a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- 2. 热门板块 -->
+        <div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-radius: 12px;">
+            <div class="card-header pb-0">
+                <div class="sidebar-title" style="font-size: 0.8rem; font-weight: 700; color: #5E6C84; margin-bottom: 10px; border-left: 3px solid #0066FF; padding-left: 8px;">
+                    🔥 热门板块
+                </div>
+            </div>
+            <div class="card-body pt-2">
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <span class="chip c-hand text-primary" style="background: #E6F0FF; border: none; font-weight: 600;">🏠 校园生活</span>
+                    <span class="chip c-hand text-success" style="background: #E3FCEF; border: none; font-weight: 600; color: #006644;">💻 极客技术</span>
+                    <span class="chip c-hand text-error" style="background: #FFEBE6; border: none; font-weight: 600; color: #DE350B;">🔥 吐槽大会</span>
+                    <span class="chip c-hand text-warning" style="background: #FFFAE6; border: none; font-weight: 600; color: #FF991F;">📚 二手交易</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3 text-center text-gray" style="font-size: 12px;">
+            © 2025 UniAsk Inc. <br> Designed for Students
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 1. 弹窗控制逻辑 (必须有，否则弹窗点不动)
+    $('.trigger-ask').click(function(){
+        $('#ask-question-modal').addClass('active');
+    });
+
+    $('.modal-overlay, .btn-clear').click(function(){
+        $('.modal').removeClass('active');
+    });
+
+    // 2. 发帖逻辑 (带封禁检测)
+    $('#post-question').click(function(){
+        var title = $('#question_title').val();
+        var detail = $('#question_detail').val();
+        if(!title) { alert('标题不能为空'); return; }
+        
+        $.ajax({
+            type: "post",
+            url: '/post_question',
+            data: JSON.stringify({title: title, detail: detail}),
+            contentType: "application/json",
+            success: function(data) {
+                if(data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    alert(data.msg); // 被封禁时显示错误信息
+                }
+            },
+            error: function() {
+                alert('网络错误，请稍后再试');
+            }
+        });
+    });
+
+    // 3. 投票逻辑
+    function vote(id, type, val){
+        var btnUp = (type === 'question') ? $('#q-up-'+id) : $('#a-up-'+id);
+        var btnDown = (type === 'question') ? $('#q-down-'+id) : $('#a-down-'+id);
+        var countSpan = $('#count-'+type+'-'+id);
+
+        $.ajax({
+            type: "post",
+            url: '/vote',
+            data: JSON.stringify({doc_id: id, doc_type: type, value: val}),
+            contentType: "application/json",
+            success: function(data) {
+                countSpan.text(data.new_count);
+                countSpan.css('transform', 'scale(1.3)');
+                setTimeout(() => countSpan.css('transform', 'scale(1)'), 200);
+
+                if (val === 'vote_up') {
+                    if(btnUp.hasClass('active-up')) {
+                        btnUp.removeClass('active-up');
+                    } else {
+                        btnUp.addClass('active-up');
+                        btnDown.removeClass('active-down');
+                    }
+                } else {
+                    if(btnDown.hasClass('active-down')) {
+                        btnDown.removeClass('active-down');
+                    } else {
+                        btnDown.addClass('active-down');
+                        btnUp.removeClass('active-up');
+                    }
+                }
+            },
+            error: function() {
+                alert('请先登录后再操作');
+                window.location.href = '/login';
+            }
+        });
+    }
+
+    // 4. 删除逻辑
+    function deleteContent(id, type, authorId) {
+        if(!confirm('确定要删除这条内容吗？删除后不可恢复。')) return;
+        
+        $.ajax({
+            type: "post",
+            url: '/delete_content',
+            data: JSON.stringify({id: id, type: type, author_id: authorId}),
+            contentType: "application/json",
+            success: function(res) {
+                if(res.status === 'success') {
+                    window.location.reload();
+                } else {
+                    alert(res.msg);
+                }
+            }
+        });
+    }
+
+    // 5. 置顶逻辑
+    function pinQuestion(qid) {
+        $.ajax({
+            type: "post",
+            url: '/admin/pin_question',
+            data: JSON.stringify({question_id: qid}),
+            contentType: "application/json",
+            success: function(res) {
+                if(res.status === 'success') {
+                    window.location.reload();
+                } else {
+                    alert(res.msg);
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
